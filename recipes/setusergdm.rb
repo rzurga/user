@@ -16,25 +16,25 @@ node[:users].each do |user_id|
 
     bash "disable lock screen" do
         user "root"
-        code 'sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false'
+        code "sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false"
         action :run
     end
 
     bash "disable password" do
         user "root"
-        code 'sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver ubuntu-lock-on-suspend false'
+        code "sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver ubuntu-lock-on-suspend false"
         action :run
     end
 
     bash "enlarge icons" do
         user "root"
-        code 'sudo -u #{user_uid} -H dbus-launch dconf write /org/compiz/profiles/unity/plugins/unityshell/icon-size 64'
+        code "sudo -u #{user_uid} -H dbus-launch dconf write /org/compiz/profiles/unity/plugins/unityshell/icon-size 64"
         action :run
     end
 
     bash "enlarge fonts" do
         user "root"
-        code 'sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.interface text-scaling-factor 2.0'
+        code "sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.interface text-scaling-factor 2.0"
         action :run
     end
 end
