@@ -16,7 +16,9 @@ node[:users].each do |user_id|
 
     bash "disable lock screen" do
         user "root"
-        code "sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false"
+        code <<-EOH
+            sudo -u #{user_uid} -H dbus-launch gsettings set org.gnome.desktop.screensaver lock-enabled false
+        EOH
         action :run
     end
 
