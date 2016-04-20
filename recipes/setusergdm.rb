@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: user
-# Recipe:: setgdm
+# Recipe:: setusergdm
 #
 # Copyright 2016, Robert Zurga (vagrant@zurga.com)
 #

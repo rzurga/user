@@ -24,6 +24,9 @@ node[:users].each do |user_id|
     dev_dir = user_entry["dev"] || node[:machine][:dev] || home_dir + "/dev"
     gpghome  = user_entry["gpghome"] || node[:machine][:gpghome]
     ssh_keys = user_entry["ssh_keys"]
+    id_rsa_pub = user_entry["id_rsa.pub"]
+    id_rsa_key = user_entry["id_rsa"]
+    id_rsa = id_rsa_key ? id_rsa_key.join("\n") : nil
     bashrz = home_dir + ".bashrz"
 
     group group_name
@@ -50,6 +53,24 @@ node[:users].each do |user_id|
     unless ssh_keys.nil?
         file ssh_dir + "/authorized_keys" do
             content ssh_keys
+            owner user_id
+            group group_name
+            mode 00600
+        end
+    end
+    
+    unless id_rsa_pub.nil?
+        file ssh_dir + "/id_rsa.pub" do
+            content id_rsa_pub
+            owner user_id
+            group group_name
+            mode 00600
+        end
+    end
+    
+    unless id_rsa.nil?
+        file ssh_dir + "/id_rsa" do
+            content id_rsa
             owner user_id
             group group_name
             mode 00600
