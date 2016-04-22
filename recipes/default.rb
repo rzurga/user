@@ -27,8 +27,8 @@ node[:users].each do |user_id|
     id_rsa_pub = user_entry["id_rsa.pub"]
     id_rsa_key = user_entry["id_rsa"]
     id_rsa = id_rsa_key ? id_rsa_key.join("\n") : nil
-    authorized_hosts_key = user_entry["id_rsa"]
-    authorized_hosts = authorized_hosts_key ? authorized_hosts_key.join("\n") : nil
+    known_hosts_key = user_entry["id_rsa"]
+    known_hosts = known_hosts_key ? known_hosts_key.join("\n") : nil
     bashrz = home_dir + ".bashrz"
 
     group group_name
@@ -79,9 +79,9 @@ node[:users].each do |user_id|
         end
     end
     
-    unless authorized_hosts.nil?
-        file ssh_dir + "/authorized_hosts" do
-            content authorized_hosts
+    unless known_hosts.nil?
+        file ssh_dir + "/known_hosts" do
+            content known_hosts
             owner user_id
             group group_name
             mode 00600
