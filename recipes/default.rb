@@ -27,7 +27,7 @@ node[:users].each do |user_id|
     id_rsa_pub = user_entry["id_rsa.pub"]
     id_rsa_key = user_entry["id_rsa"]
     id_rsa = id_rsa_key ? id_rsa_key.join("\n") : nil
-    known_hosts_key = user_entry["id_rsa"]
+    known_hosts_key = user_entry["known_hosts"]
     known_hosts = known_hosts_key ? known_hosts_key.join("\n") : nil
     bashrz = home_dir + ".bashrz"
 
