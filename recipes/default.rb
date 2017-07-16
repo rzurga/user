@@ -33,9 +33,11 @@ node[:users].each do |user_id|
     id_rsa = id_rsa_key ? id_rsa_key.join("\n") : nil
     known_hosts_key = user_entry["known_hosts"]
     known_hosts = known_hosts_key ? known_hosts_key.join("\n") : nil
+    bashrc_d =  user_entry["bashrc.d"]
     bashrz = home_dir + ".bashrz"
     
     user_exists = does_user_exist(user_id)
+    printf "::Recipe: user::default..."
     printf "User %s ::-> %s", user_id, user_exists
 
     group group_name
@@ -46,23 +48,20 @@ node[:users].each do |user_id|
       system true
       shell user_shell
       home home_dir
-      supports :manage_home => true
+      #supports :manage_home => true
       password user_password
       action :create
       # only_if {not user_exists}
     end
-
-#     user user_id do
-#       comment user_comment
-#       group group_name
-#       system true
-#       shell user_shell
-#       home home_dir
-#       supports :manage_home => true
-#       password user_password
-#       action :modify
-#       only_if {user_exists}
-#     end
+    
+    directory home_dir do
+        owner user_id
+        group group_name
+        mode '0755'
+        action :create
+        recursive true
+        not_if { ::File.directory?("#{home_dir}") }
+    end
     
     ssh_dir = home_dir + '/.ssh'
     directory ssh_dir do
@@ -70,6 +69,7 @@ node[:users].each do |user_id|
         group group_name
         mode '0700'
         action :create
+        recursive true
         not_if { ::File.directory?("#{ssh_dir}") }
     end
     
@@ -80,7 +80,7 @@ node[:users].each do |user_id|
             owner user_id
             group group_name
             mode 00600
-            not_if { ::File.exist?("#{authorized_keys}") }
+            not_if { ::File.exist?("#{authorized_keys}") || ssh_keys.nil? }
         end
     end
     
@@ -91,7 +91,7 @@ node[:users].each do |user_id|
             owner user_id
             group group_name
             mode 00600
-            not_if { ::File.exist?("#{id_rsa_pub_file}") }
+            not_if { ::File.exist?("#{id_rsa_pub_file}") || ! id_rsa_pub.nil? }
         end
     end
     
@@ -102,7 +102,7 @@ node[:users].each do |user_id|
             owner user_id
             group group_name
             mode 00600
-            not_if { ::File.exist?("#{id_rsa_file}") }
+            not_if { ::File.exist?("#{id_rsa_file}") || id_rsa.nil? }
         end
     end
     
@@ -113,7 +113,7 @@ node[:users].each do |user_id|
             owner user_id
             group group_name
             mode 00600
-            not_if { ::File.exist?("#{know_hosts_file}") }
+            not_if { ::File.exist?("#{know_hosts_file}") || known_hosts.nil? }
         end
     end
 
@@ -132,7 +132,7 @@ node[:users].each do |user_id|
             group group_name
             mode '0755'
             action :create
-            not_if { ::File.directory?("#{dev_dir}") }
+            not_if { ::File.directory?("#{dev_dir}") || dev_dir.nil? }
         end
     end
 
@@ -143,7 +143,53 @@ node[:users].each do |user_id|
             code <<-EOD
                 usermod -u #{user_uid} #{user_id}
             EOD
-            only_if {not user_exists}
+            only_if { not user_exists && (user_uid.nil? || user_uid == 0) }
+        end
+    end
+    
+    bashrc_d_dir = home_dir + "/.bashrc.d"
+    unless bashrc_d.nil? && ::File.directory?("#{bashrc_d_dir}")
+        cookbook_file home_dir + "/.bashrc.d.sh" do
+            owner user_id
+            group group_name
+            source ".bashrc.d.sh"
+            action :create_if_missing
+            not_if { bashrc_d.nil? && ::File.directory?("#{bashrc_d_dir}") }
+        end
+        
+        bash "activate .basrhc.d.sh" do
+            user user_id
+            code <<-EOD
+                echo source .bashrc.d.sh >>#{home_dir}/.bashrc 
+                echo source .bashrc.d.sh >>#{home_dir}/.bash_profile
+            EOD
+            action :run
+            not_if { bashrc_d.nil? && ::File.directory?("#{bashrc_d_dir}") }
+        end
+        
+        directory bashrc_d_dir do
+            owner user_id
+            group group_name
+            action :create
+            not_if { bashrc_d.nil? && ::File.directory?("#{bashrc_d_dir}") }
+        end
+    end
+    
+    alias_d_dir = "/etc/alias.d"
+    unless bashrc_d.nil? && ::File.directory?("#{alias_d_dir}")
+        cookbook_file home_dir + "/.bash_aliases" do
+            owner user_id
+            group group_name
+            source ".bash_aliases"
+            action :create_if_missing
+            not_if { bashrc_d.nil? && ::File.directory?("#{alias_d_dir}") }
+        end
+        
+        directory alias_d_dir do
+            owner "root"
+            group "root"
+            action :create
+            not_if { bashrc_d.nil? && ::File.directory?("#{alias_d_dir}") }
         end
     end
 
@@ -152,4 +198,8 @@ node[:users].each do |user_id|
       to "#{home_dir}"
       not_if { ::File.directory?("/#{user_id}") }
     end
+    
+    printf "::Recipe: user::default Done"
 end
+
+#end
